@@ -1,16 +1,27 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { Home, MessageCircle, Users, Settings, LogOut, Sparkles } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useNotifications } from '../context/NotificationsContext.jsx'
 import { Avatar } from './common/Avatar.jsx'
 import { StatusPicker } from './StatusPicker.jsx'
 
 const linkClass = ({ isActive }) =>
-  `flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
+  `relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
     isActive ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-100'
   }`
 
+function NavBadge({ count }) {
+  if (!count) return null
+  return (
+    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
+      {count > 99 ? '99+' : count}
+    </span>
+  )
+}
+
 export function Layout({ children }) {
   const { user, logout } = useAuth()
+  const { messageUnread, requestCount } = useNotifications()
   const navigate = useNavigate()
 
   return (
@@ -26,9 +37,11 @@ export function Layout({ children }) {
           </NavLink>
           <NavLink to="/chat" className={linkClass}>
             <MessageCircle size={18} /> Chat
+            <NavBadge count={messageUnread} />
           </NavLink>
           <NavLink to="/friends" className={linkClass}>
             <Users size={18} /> Friends
+            <NavBadge count={requestCount} />
           </NavLink>
           <NavLink to="/settings" className={linkClass}>
             <Settings size={18} /> Settings

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { UserPlus, Check, X, MessageCircle } from 'lucide-react'
 import { friendApi, chatApi } from '../api/endpoints.js'
 import { Avatar } from '../components/common/Avatar.jsx'
+import { useNotifications } from '../context/NotificationsContext.jsx'
+import { useSocket } from '../socket/SocketProvider.jsx'
 
 export default function Friends() {
   const [friends, setFriends] = useState([])
@@ -10,16 +12,31 @@ export default function Friends() {
   const [username, setUsername] = useState('')
   const [msg, setMsg] = useState(null)
   const navigate = useNavigate()
+  const { refreshFriendRequests } = useNotifications()
+  const socket = useSocket()
 
   const load = useCallback(async () => {
     const [f, r] = await Promise.all([friendApi.list(), friendApi.requests()])
     setFriends(f)
     setRequests(r)
-  }, [])
+    refreshFriendRequests()
+  }, [refreshFriendRequests])
 
   useEffect(() => {
     load()
   }, [load])
+
+  // Live-update the list when a request comes in or is accepted.
+  useEffect(() => {
+    if (!socket) return
+    const reload = () => load()
+    socket.on('friend:request', reload)
+    socket.on('friend:accepted', reload)
+    return () => {
+      socket.off('friend:request', reload)
+      socket.off('friend:accepted', reload)
+    }
+  }, [socket, load])
 
   const send = async (e) => {
     e.preventDefault()

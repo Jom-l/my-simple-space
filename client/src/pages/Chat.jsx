@@ -4,6 +4,7 @@ import { useCursorList } from '../hooks/useCursorList.js'
 import { chatApi } from '../api/endpoints.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useSocket } from '../socket/SocketProvider.jsx'
+import { useNotifications } from '../context/NotificationsContext.jsx'
 import { ConversationList } from '../components/chat/ConversationList.jsx'
 import { MessageList } from '../components/chat/MessageList.jsx'
 import { ChatInput } from '../components/chat/ChatInput.jsx'
@@ -13,6 +14,7 @@ import { STATUS_LABELS } from '../components/common/StatusDot.jsx'
 export default function Chat() {
   const { user } = useAuth()
   const socket = useSocket()
+  const { setActiveConversation } = useNotifications()
   const [params, setParams] = useSearchParams()
   const [conversations, setConversations] = useState([])
   const [active, setActive] = useState(null)
@@ -120,6 +122,12 @@ export default function Chat() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket, activeId])
+
+  // Keep the global notification badge in sync with the open chat.
+  useEffect(() => {
+    setActiveConversation(activeId || null)
+    return () => setActiveConversation(null)
+  }, [activeId, setActiveConversation])
 
   // On opening a conversation, clear its unread + mark newest seen.
   useEffect(() => {
