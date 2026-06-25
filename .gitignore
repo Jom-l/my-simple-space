@@ -14,6 +14,10 @@ dist-ssr/
 build/
 *.local
 
+# Uploaded media (keep the folder, ignore contents)
+server/uploads/*
+!server/uploads/.gitkeep
+
 # Logs
 logs/
 *.log
